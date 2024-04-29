@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsNotEmpty,
   IsOptional,
+  IsString,
   IsUUID,
 } from 'class-validator';
 
@@ -15,6 +16,7 @@ export class User {
   email: string;
 
   @IsNotEmpty()
+  @IsString()
   password: string;
 
   //TODO add role

@@ -3,8 +3,8 @@ import {
   IsEmail,
   IsNotEmpty,
   IsOptional,
+  IsString,
   IsUUID,
-  MinLength,
 } from 'class-validator';
 
 export class Auth {
@@ -16,7 +16,7 @@ export class Auth {
   email: string;
 
   @IsNotEmpty()
-  @MinLength(6)
+  @IsString()
   password: string;
 
   //TODO add role

@@ -10,6 +10,8 @@ import { TokenPayload } from './models/tokenPayload';
 import { Token } from './models/token';
 import { RegisterAuthDto } from './dto/register-auth.dto';
 import { UsersService } from 'src/users/users.service';
+import * as bcrypt from 'bcrypt';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -20,20 +22,14 @@ export class AuthService {
   ) {}
 
   async login(email: string, pass: string): Promise<Token> {
-    const user = await this.prisma.user.findUnique({ where: { email } });
-    if (user?.password !== pass) {
-      throw new NotFoundException('User not exist');
-    }
-
-    const isPasswordValid = user.password === pass;
-
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid password');
-    }
+    const user = await this.validateUser(email, pass);
 
     const payload: TokenPayload = { id: user.id, email: user.email };
     return {
       access_token: await this.jwtService.signAsync(payload),
+      refresh_token: await this.jwtService.signAsync(payload, {
+        expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION,
+      }),
     };
   }
 
@@ -47,4 +43,29 @@ export class AuthService {
 
     return this.usersService.create(newUser);
   }
+
+  async refresh(email: string, pass: string) {
+    const user = await this.validateUser(email, pass);
+
+    const payload: TokenPayload = { id: user.id, email: user.email };
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+    };
+  }
+
+  validateUser = async (email: string, pass: string): Promise<User> => {
+    const user: User = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      throw new NotFoundException('User not exist');
+    }
+
+    const isPasswordValid = await bcrypt.compare(pass, user.password);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Invalid password');
+    }
+
+    return user;
+  };
 }
