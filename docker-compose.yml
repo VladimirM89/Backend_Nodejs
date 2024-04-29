@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+
+  postgres:
+    image: postgres:16.2-alpine3.18
+    build: ./src/db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRESDB_USER}
+      POSTGRES_PASSWORD: ${POSTGRESDB_PASSWORD}
+      POSTGRES_DB: ${POSTGRESDB_DATABASE}
+    ports:
+      - "${POSTGRESDB_LOCAL_PORT}:${POSTGRESDB_DOCKER_PORT}"
+    volumes:
+      - ./pgdata:/var/lib/postgres/data
+    restart: always
+
+volumes:
+  postgres:
