@@ -1,16 +1,12 @@
+import { Role } from '@prisma/client';
 import {
-  IsDate,
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
 } from 'class-validator';
-
 export class Auth {
-  @IsUUID(4)
-  id: string;
-
   @IsEmail()
   @IsNotEmpty()
   email: string;
@@ -19,13 +15,7 @@ export class Auth {
   @IsString()
   password: string;
 
-  //TODO add role
   @IsOptional()
-  role?: string;
-
-  @IsDate()
-  createdAt: Date;
-
-  @IsDate()
-  updatedAt: Date;
+  @IsEnum(Role)
+  role: Role;
 }

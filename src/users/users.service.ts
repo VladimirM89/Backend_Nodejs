@@ -3,18 +3,18 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createUserDto: CreateUserDto) {
-    const hashedPassword = await bcrypt.hash(
-      createUserDto.password,
-      Number(process.env.CRYPT_SALT),
-    );
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const { email, password, role } = createUserDto;
+    const hashedPassword = await this.hashPassword(password);
+
     return this.prisma.user.create({
-      data: { email: createUserDto.email, password: hashedPassword },
+      data: { email, password: hashedPassword, role },
     });
   }
 
@@ -32,5 +32,14 @@ export class UsersService {
 
   remove(id: number) {
     return `This action removes a #${id} user`;
+  }
+
+  private async hashPassword(password: string): Promise<string> {
+    const hashedPassword: string = await bcrypt.hash(
+      password,
+      Number(process.env.CRYPT_SALT),
+    );
+
+    return hashedPassword;
   }
 }

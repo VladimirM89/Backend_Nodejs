@@ -7,7 +7,7 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { TokenPayload } from './models/tokenPayload';
-import { Token } from './models/token';
+import { TokensResponse } from './models/token';
 import { RegisterAuthDto } from './dto/register-auth.dto';
 import { UsersService } from 'src/users/users.service';
 import * as bcrypt from 'bcrypt';
@@ -21,19 +21,16 @@ export class AuthService {
     private usersService: UsersService,
   ) {}
 
-  async login(email: string, pass: string): Promise<Token> {
+  async login(email: string, pass: string): Promise<TokensResponse> {
     const user = await this.validateUser(email, pass);
 
     const payload: TokenPayload = { id: user.id, email: user.email };
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-      refresh_token: await this.jwtService.signAsync(payload, {
-        expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION,
-      }),
-    };
+    const tokens = await this.generateTokens(payload);
+
+    return tokens;
   }
 
-  async register(newUser: RegisterAuthDto) {
+  async register(newUser: RegisterAuthDto): Promise<User | TokensResponse> {
     const { email } = newUser;
     const existUser = await this.prisma.user.findUnique({ where: { email } });
 
@@ -53,7 +50,7 @@ export class AuthService {
     };
   }
 
-  validateUser = async (email: string, pass: string): Promise<User> => {
+  async validateUser(email: string, pass: string): Promise<User> {
     const user: User = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
@@ -67,5 +64,14 @@ export class AuthService {
     }
 
     return user;
-  };
+  }
+
+  private async generateTokens(payload: TokenPayload): Promise<TokensResponse> {
+    return {
+      access_token: await this.jwtService.signAsync(payload),
+      refresh_token: await this.jwtService.signAsync(payload, {
+        expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRATION,
+      }),
+    };
+  }
 }
