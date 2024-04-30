@@ -17,20 +17,25 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtGuard } from 'src/auth/guards/jwt-auth.guard';
 import { User } from './entities/user.entity';
+import { Roles } from 'src/libs/decorators/currentUser.decorator';
+import { Role } from '@prisma/client';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @UseGuards(JwtGuard)
+  @Roles(Role.ADMIN)
+  @UseGuards(JwtGuard, RolesGuard)
   @Get()
   async findAll() {
     const users = await this.usersService.findAll();
     return users.map((user) => new User(user));
   }
 
-  @UseGuards(JwtGuard)
+  @Roles(Role.ADMIN, Role.USER)
+  @UseGuards(JwtGuard, RolesGuard)
   @Get(':id')
   async findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     const user = await this.usersService.findOne(id);
@@ -42,7 +47,8 @@ export class UsersController {
     return new User(user);
   }
 
-  @UseGuards(JwtGuard)
+  @Roles(Role.ADMIN, Role.USER)
+  @UseGuards(JwtGuard, RolesGuard)
   @Put(':id')
   async update(
     @Param('id', new ParseUUIDPipe()) id: string,
@@ -59,14 +65,15 @@ export class UsersController {
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtGuard)
+  @Roles(Role.ADMIN, Role.USER)
+  @UseGuards(JwtGuard, RolesGuard)
   @Delete(':id')
   async remove(@Param('id', new ParseUUIDPipe()) id: string) {
     const user = await this.usersService.findOne(id);
 
     if (!user) {
-      throw new NotFoundException('User no found');
+      throw new NotFoundException('User not found');
     }
-    return this.usersService.remove(id);
+    return await this.usersService.remove(id);
   }
 }

@@ -21,10 +21,11 @@ export class AuthService {
     private usersService: UsersService,
   ) {}
 
-  async login(email: string, pass: string): Promise<TokensResponse> {
-    const user = await this.validateUser(email, pass);
+  async login(userEmail: string, userPass: string): Promise<TokensResponse> {
+    const user = await this.validateUser(userEmail, userPass);
+    const { id, email, role } = user;
 
-    const payload: TokenPayload = { id: user.id, email: user.email };
+    const payload: TokenPayload = { id, email, role };
     const tokens = await this.generateTokens(payload);
 
     return tokens;
@@ -43,10 +44,11 @@ export class AuthService {
     return new User(userResponse);
   }
 
-  async refresh(email: string, pass: string) {
-    const user = await this.validateUser(email, pass);
+  async refresh(userEmail: string, userPass: string) {
+    const user = await this.validateUser(userEmail, userPass);
+    const { id, email, role } = user;
 
-    const payload: TokenPayload = { id: user.id, email: user.email };
+    const payload: TokenPayload = { id, email, role };
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
