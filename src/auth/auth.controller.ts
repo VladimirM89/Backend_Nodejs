@@ -9,7 +9,7 @@ import {
 import { AuthService } from './auth.service';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { RegisterAuthDto } from './dto/register-auth.dto';
-import { RefreshJwtGuard } from './guards/refresh-jwt.guard';
+import { RefreshJwtGuard } from '../libs/guards/refresh-jwt.guard';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('auth')

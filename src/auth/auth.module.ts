@@ -6,7 +6,7 @@ import { PassportModule } from '@nestjs/passport';
 import { UsersService } from 'src/users/users.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { RefreshJwtGuard } from './guards/refresh-jwt.guard';
+import { RefreshJwtGuard } from '../libs/guards/refresh-jwt.guard';
 import { RefreshJwtStrategy } from './strategies/refreshToken.strategy';
 
 @Module({

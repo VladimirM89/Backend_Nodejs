@@ -7,19 +7,22 @@ import {
   Put,
   UseGuards,
   ParseUUIDPipe,
-  NotFoundException,
   HttpCode,
   HttpStatus,
   UseInterceptors,
   ClassSerializerInterceptor,
+  ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { JwtGuard } from 'src/auth/guards/jwt-auth.guard';
+import { JwtGuard } from 'src/libs/guards/jwt-auth.guard';
 import { User } from './entities/user.entity';
-import { Roles } from 'src/libs/decorators/currentUser.decorator';
+import { Roles } from 'src/libs/decorators/userRole.decorator';
 import { Role } from '@prisma/client';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { RolesGuard } from 'src/libs/guards/roles.guard';
+import { CurrentUser } from 'src/libs/decorators/currentUser.decorator';
+import { TokenPayload } from 'src/auth/models/tokenPayload';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
@@ -37,11 +40,18 @@ export class UsersController {
   @Roles(Role.ADMIN, Role.USER)
   @UseGuards(JwtGuard, RolesGuard)
   @Get(':id')
-  async findOne(@Param('id', new ParseUUIDPipe()) id: string) {
+  async findOne(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
     const user = await this.usersService.findOne(id);
 
     if (!user) {
-      throw new NotFoundException('User no found');
+      throw new NotFoundException('User not found');
+    }
+
+    if (id !== currentUser.id && currentUser.role !== Role.ADMIN) {
+      throw new ForbiddenException('You cannot see info about another user');
     }
 
     return new User(user);
@@ -52,12 +62,17 @@ export class UsersController {
   @Put(':id')
   async update(
     @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() currentUser: TokenPayload,
     @Body() updateUserDto: UpdateUserDto,
   ) {
     const user = await this.usersService.findOne(id);
 
     if (!user) {
-      throw new NotFoundException('User no found');
+      throw new NotFoundException('User not found');
+    }
+
+    if (id !== currentUser.id && currentUser.role !== Role.ADMIN) {
+      throw new ForbiddenException('You cannot update another user info');
     }
 
     const userWithPassword = await this.usersService.update(id, updateUserDto);
@@ -68,12 +83,20 @@ export class UsersController {
   @Roles(Role.ADMIN, Role.USER)
   @UseGuards(JwtGuard, RolesGuard)
   @Delete(':id')
-  async remove(@Param('id', new ParseUUIDPipe()) id: string) {
+  async remove(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() currentUser: TokenPayload,
+  ) {
     const user = await this.usersService.findOne(id);
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return await this.usersService.remove(id);
+
+    if (id !== currentUser.id && currentUser.role !== Role.ADMIN) {
+      throw new ForbiddenException('You cannot delete another user');
+    }
+
+    return this.usersService.remove(id);
   }
 }
