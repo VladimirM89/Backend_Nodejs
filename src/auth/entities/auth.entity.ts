@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MinLength,
 } from 'class-validator';
 export class Auth {
   @IsEmail()
@@ -13,6 +14,7 @@ export class Auth {
 
   @IsNotEmpty()
   @IsString()
+  @MinLength(6)
   password: string;
 
   @IsOptional()

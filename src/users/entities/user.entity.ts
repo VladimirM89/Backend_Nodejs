@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  MinLength,
 } from 'class-validator';
 import { Role } from '@prisma/client';
 
@@ -19,6 +20,7 @@ export class User {
 
   @IsNotEmpty()
   @IsString()
+  @MinLength(6)
   password: string;
 
   @IsOptional()
