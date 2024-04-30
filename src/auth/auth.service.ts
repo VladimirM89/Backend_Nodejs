@@ -38,7 +38,9 @@ export class AuthService {
       throw new BadRequestException('User with this email already exist');
     }
 
-    return this.usersService.create(newUser);
+    const userResponse = await this.usersService.create(newUser);
+
+    return new User(userResponse);
   }
 
   async refresh(email: string, pass: string) {
@@ -50,7 +52,7 @@ export class AuthService {
     };
   }
 
-  async validateUser(email: string, pass: string): Promise<User> {
+  private async validateUser(email: string, pass: string): Promise<User> {
     const user: User = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {

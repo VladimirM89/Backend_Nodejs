@@ -9,6 +9,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { Role } from '@prisma/client';
+import { Exclude } from 'class-transformer';
 
 export class User {
   @IsUUID(4)
@@ -21,6 +22,7 @@ export class User {
   @IsNotEmpty()
   @IsString()
   @MinLength(6)
+  @Exclude()
   password: string;
 
   @IsOptional()
@@ -32,4 +34,8 @@ export class User {
 
   @IsDate()
   updatedAt: Date;
+
+  constructor(partial: Partial<User>) {
+    Object.assign(this, partial);
+  }
 }

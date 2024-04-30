@@ -47,7 +47,7 @@ export class UsersService {
   }
 
   remove(id: string) {
-    return this.prisma.user.delete({ where: { id } });
+    return this.prisma.user.delete({ where: { id }, select: { id: true } });
   }
 
   private async hashPassword(password: string): Promise<string> {

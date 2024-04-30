@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  Post,
   Body,
   Param,
   Delete,
@@ -11,25 +10,24 @@ import {
   NotFoundException,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtGuard } from 'src/auth/guards/jwt-auth.guard';
+import { User } from './entities/user.entity';
 
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
   @UseGuards(JwtGuard)
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  async findAll() {
+    const users = await this.usersService.findAll();
+    return users.map((user) => new User(user));
   }
 
   @UseGuards(JwtGuard)
@@ -41,7 +39,7 @@ export class UsersController {
       throw new NotFoundException('User no found');
     }
 
-    return user;
+    return new User(user);
   }
 
   @UseGuards(JwtGuard)
@@ -56,7 +54,8 @@ export class UsersController {
       throw new NotFoundException('User no found');
     }
 
-    return this.usersService.update(id, updateUserDto);
+    const userWithPassword = await this.usersService.update(id, updateUserDto);
+    return new User(userWithPassword);
   }
 
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -68,6 +67,6 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException('User no found');
     }
-    this.usersService.remove(id);
+    return this.usersService.remove(id);
   }
 }
