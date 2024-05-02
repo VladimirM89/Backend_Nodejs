@@ -1,5 +1,7 @@
 # Backend task
 
+## DEPLOY: https://backendnodejs-production.up.railway.app
+
 ## Prerequisites
 
 - Git - [Download & Install Git](https://git-scm.com/downloads).
