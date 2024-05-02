@@ -17,16 +17,16 @@ Change directory:
 cd Backend_Nodejs
 ```
 
-## Installing NPM modules
-
-```
-npm install
-```
-
 ## Enter to developing branch
 
 ```
 git checkout develop
+```
+
+## Installing NPM modules
+
+```
+npm install
 ```
 
 ## Rename .env.example
@@ -55,3 +55,5 @@ npm run start
 ```
 
 Server will start on 4000 (port from .env file).
+
+To make request to server - **localhost:4000**
