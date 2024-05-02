@@ -1,9 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-import { User } from '@prisma/client';
+import { Role, User } from '@prisma/client';
+import { TokenPayload } from 'src/auth/models/tokenPayload';
+import { USER_NOT_FOUNT } from 'src/constants/stringConstants';
 
 @Injectable()
 export class UsersService {
@@ -22,11 +28,27 @@ export class UsersService {
     return this.prisma.user.findMany({ include: { posts: true } });
   }
 
-  async findOne(id: string) {
+  async findOneById(id: string) {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: { posts: true },
     });
+
+    if (!user) {
+      throw new NotFoundException(USER_NOT_FOUNT);
+    }
+
+    return user;
+  }
+
+  async findOneByEmail(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new NotFoundException(USER_NOT_FOUNT);
+    }
 
     return user;
   }
@@ -57,5 +79,11 @@ export class UsersService {
     );
 
     return hashedPassword;
+  }
+
+  checkUserPermissions(id: string, currentUser: TokenPayload, error: string) {
+    if (id !== currentUser.id && currentUser.role !== Role.ADMIN) {
+      throw new ForbiddenException(error);
+    }
   }
 }

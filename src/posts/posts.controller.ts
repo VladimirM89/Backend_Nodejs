@@ -10,8 +10,8 @@ import {
   Put,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
+import { CreatePostDto } from './dto/createPost.dto';
+import { UpdatePostDto } from './dto/updatePost.dto';
 import { JwtGuard } from 'src/libs/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/libs/decorators/currentUser.decorator';
 import { TokenPayload } from 'src/auth/models/tokenPayload';

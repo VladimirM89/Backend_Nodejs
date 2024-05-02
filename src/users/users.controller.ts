@@ -11,8 +11,6 @@ import {
   HttpStatus,
   UseInterceptors,
   ClassSerializerInterceptor,
-  ForbiddenException,
-  NotFoundException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -23,6 +21,11 @@ import { Role } from '@prisma/client';
 import { RolesGuard } from 'src/libs/guards/roles.guard';
 import { CurrentUser } from 'src/libs/decorators/currentUser.decorator';
 import { TokenPayload } from 'src/auth/models/tokenPayload';
+import {
+  CANNOT_SHOW_ANOTHER_USER,
+  CANNOT_UPDATE_ANOTHER_USER,
+  CANNOT_DELETE_ANOTHER_USER,
+} from 'src/constants/stringConstants';
 
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
@@ -44,15 +47,13 @@ export class UsersController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    const user = await this.usersService.findOne(id);
+    const user = await this.usersService.findOneById(id);
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (id !== currentUser.id && currentUser.role !== Role.ADMIN) {
-      throw new ForbiddenException('You cannot see info about another user');
-    }
+    this.usersService.checkUserPermissions(
+      id,
+      currentUser,
+      CANNOT_SHOW_ANOTHER_USER,
+    );
 
     return new User(user);
   }
@@ -65,15 +66,13 @@ export class UsersController {
     @CurrentUser() currentUser: TokenPayload,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    const user = await this.usersService.findOne(id);
+    await this.usersService.findOneById(id);
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (id !== currentUser.id && currentUser.role !== Role.ADMIN) {
-      throw new ForbiddenException('You cannot update another user info');
-    }
+    this.usersService.checkUserPermissions(
+      id,
+      currentUser,
+      CANNOT_UPDATE_ANOTHER_USER,
+    );
 
     const userWithPassword = await this.usersService.update(id, updateUserDto);
     return new User(userWithPassword);
@@ -87,15 +86,13 @@ export class UsersController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @CurrentUser() currentUser: TokenPayload,
   ) {
-    const user = await this.usersService.findOne(id);
+    await this.usersService.findOneById(id);
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (id !== currentUser.id && currentUser.role !== Role.ADMIN) {
-      throw new ForbiddenException('You cannot delete another user');
-    }
+    this.usersService.checkUserPermissions(
+      id,
+      currentUser,
+      CANNOT_DELETE_ANOTHER_USER,
+    );
 
     return this.usersService.remove(id);
   }

@@ -7,8 +7,8 @@ import {
   ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginAuthDto } from './dto/login-auth.dto';
-import { RegisterAuthDto } from './dto/register-auth.dto';
+import { LoginAuthDto } from './dto/loginAuth.dto';
+import { RegisterAuthDto } from './dto/registerAuth.dto';
 import { RefreshJwtGuard } from '../libs/guards/refresh-jwt.guard';
 
 @UseInterceptors(ClassSerializerInterceptor)

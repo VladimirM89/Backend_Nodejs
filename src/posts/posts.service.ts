@@ -3,12 +3,17 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
+import { CreatePostDto } from './dto/createPost.dto';
+import { UpdatePostDto } from './dto/updatePost.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import { TokenPayload } from 'src/auth/models/tokenPayload';
 import { Role } from '@prisma/client';
+import {
+  CANNOT_DELETE_POST_ANOTHER_USER,
+  CANNOT_UPDATE_POST_ANOTHER_USER,
+  NOT_FOUND_POST,
+} from 'src/constants/stringConstants';
 
 @Injectable()
 export class PostsService {
@@ -30,7 +35,7 @@ export class PostsService {
   async findOne(id: string) {
     const post = await this.prisma.post.findUnique({ where: { id } });
     if (!post) {
-      throw new BadRequestException('No post with this id');
+      throw new BadRequestException(NOT_FOUND_POST);
     }
     return post;
   }
@@ -41,14 +46,11 @@ export class PostsService {
     currentUser: TokenPayload,
   ) {
     const post = await this.findOne(id);
-    if (!post) {
-      throw new BadRequestException('No post with this id');
-    }
 
-    const user = await this.usersService.findOne(post.userId);
+    const user = await this.usersService.findOneById(post.userId);
 
     if (user.id !== currentUser.id) {
-      throw new ForbiddenException('You cannot update another author post');
+      throw new ForbiddenException(CANNOT_UPDATE_POST_ANOTHER_USER);
     }
 
     return this.prisma.post.update({ where: { id }, data: updatePostDto });
@@ -56,14 +58,11 @@ export class PostsService {
 
   async remove(id: string, currentUser: TokenPayload) {
     const post = await this.findOne(id);
-    if (!post) {
-      throw new BadRequestException('No found post with this id');
-    }
 
-    const user = await this.usersService.findOne(post.userId);
+    const user = await this.usersService.findOneById(post.userId);
 
     if (user && user.id !== currentUser.id && currentUser.role !== Role.ADMIN) {
-      throw new ForbiddenException('You cannot delete another author post');
+      throw new ForbiddenException(CANNOT_DELETE_POST_ANOTHER_USER);
     }
 
     return this.prisma.post.delete({ where: { id }, select: { id: true } });
